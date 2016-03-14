@@ -1,0 +1,27 @@
+{
+
+  "name": "Twitch multistream",
+  "version": "1.701.21",
+  "manifest_version": 2,
+  "description": "Twitch multistream lets you easily make a multistream of all your favorite twitch streamers",
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://api.twitch.tv; object-src 'self'",
+  "options_page": "options.html",
+  "homepage_url":"https://chrome.google.com/webstore/detail/twitch-multistream/mjaafpfnaeofaacnmkfdafldodlaomln",
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "browser_action": {
+    "default_icon": "images/icon19.png",
+    "default_title": "Twitch multistream",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "http://kbmod.com/multistream/*",
+    "https://api.twitch.tv/*",
+    "http://twitch.tv/*"
+  ]
+}
