@@ -10,19 +10,21 @@
         isCurrentMulti,
         WAIT_TIME = 1000;
 
-    //trims the url to the channel name
     function getStreamName(url) {
-        var temp = url;
-        temp = temp.replace("http://www.twitch.tv/", '');
-        temp = temp.replace("https://www.twitch.tv/", '');
-        temp = temp.replace("www.twitch.tv/", '');
-        var extraIndex = temp.indexOf("#");
-        if (extraIndex !== -1)
-            temp = temp.substring(0, extraIndex);
-        var popoutIndex = temp.indexOf("/popout")
-        if (popoutIndex !== -1)
-            temp = temp.substring(0, popoutIndex);
-        return temp.trim();
+        function parseQuery(queryString) {
+            var query = {};
+            var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+            for (var i = 0; i < pairs.length; i++) {
+                var pair = pairs[i].split('=');
+                query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+            }
+            return query;
+        }
+        var tmp = document.createElement('a');
+        tmp.href = url;
+
+        var query = parseQuery(tmp.search).channel
+        return query.channel ? query.channel : tmp.pathname.substring(1);
     }
 
     //ajax request to check if channel name exsits
