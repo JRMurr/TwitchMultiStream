@@ -52,13 +52,42 @@
     }
 
     //makes multiStream 
-    function makeMultiStream() {
-        removeStreams();
-        closeTabs();
-        if (isCurrentMulti)
-        //updating multi
+    function makeMultiStream(event) {
+        function getMultiUrl(streamNameArr) {
+            if (streamNameArr.length <= 6) {
+                var layoutNumber = streamNameArr.length * 3;
+                var multistreamLink = "http://multistre.am/"
+                multistreamLink += streamNameArr.join('/');
+                multistreamLink += "/layout" + layoutNumber;
+                return multistreamLink
+            } else if (streamNameArr.length > 6){
+                alert("Cant have more then 6 streams in a multistream, uncheck some streams");
+                return;
+            }
+        }
+        var multiRes = event.data.multiRes;
+        var includedStreams = event.data.streams.filter(function (stream) {
+            var elm = $('#' + stream.streamName);
+            return $('#' + stream.streamName).prop("checked");
+        });
+
+        // for (var i = streamsInMulti.length - 1; i >= 0; i--) {
+        //     multiStreamName = streamsInMulti[i];
+        //     if ($('#' + multiStreamName).prop("checked") == false) {
+        //         streamsInMulti.splice(i, 1); //,1 means remove only 1
+        //     }
+        // };
+
+        if ($("#closeTab").prop("checked")) {
+            includedStreams.forEach(element => {
+                chrome.tabs.remove(element.id)
+            });
+        }
+
+
+        if (multiRes.isMulti)
         {
-            //Checks to make sure updated multi is still less then 6 by combinf current streams and new into one array
+            //Checks to make sure updated multi is still less then 6 by combining current streams and new into one array
             var allStreams = arrayUnique(streamsInMulti.concat(checkedStreams));
             if(favStream){
                 allStreams = arrayUnique(allStreams.concat(favStream));
@@ -70,28 +99,22 @@
                     multistreamLink = multistreamLink + allStreams[i] + "/";
                     layoutNumber += 3;
                 };
-                multistreamLink = multistreamLink + "layout" + layoutNumber;
+                multistreamLink = multistreamLink + "/layout" + layoutNumber;
                 chrome.tabs.update(currentTab.id, {
                     url: multistreamLink
                 });
             } else if (checkedStreams.length > 6)
                 alert("Cant have more then 6 streams in a multistream, uncheck some streams");
         }
-        //If makeing new multi
         else {
-            if (checkedStreams.length > 0 && checkedStreams.length <= 6) {
-                var layoutNumber = 0;
-                multistreamLink = "http://multistre.am/"
-                for (var i = 0; i < checkedStreams.length; i++) {
-                    multistreamLink = multistreamLink + checkedStreams[i] + "/";
-                    layoutNumber += 3;
-                };
-                multistreamLink = multistreamLink + "layout" + layoutNumber;
+            var streamNames = includedStreams.map(elm => elm.streamName);
+            var url = getMultiUrl(streamNames)
+            console.log(`url: ${url}`);
+            if (url) {
                 chrome.tabs.create({
-                    url: multistreamLink
+                    url: url
                 });
-            } else if (checkedStreams.length > 6)
-                alert("Cant have more then 6 streams in a multistream, uncheck some streams");
+            }
         }
     }
 
@@ -104,41 +127,9 @@
                     a.splice(j--, 1);
             }
         }
-
         return a;
     };
 
-    //removes unchecked streams from being added to multistream
-    function removeStreams() {
-        for (var i = checkedStreams.length - 1; i >= 0; i--) {
-            checkedStreamName = checkedStreams[i];
-            if ($('#' + checkedStreamName).prop("checked") == false) {
-                checkedStreams.splice(i, 1);
-            }
-        };
-        for (var i = streamsInMulti.length - 1; i >= 0; i--) {
-            multiStreamName = streamsInMulti[i];
-            if ($('#' + multiStreamName).prop("checked") == false) {
-                streamsInMulti.splice(i, 1); //,1 means remove only 1
-            }
-        };
-    }
-
-
-
-    function closeTabs() {
-        if ($("#CloseTab").prop("checked")) {
-            var urls = checkedStreams.map(stream => `*://www.twitch.tv/*${stream}*`)
-            // for (var stream in checkedStreams) {
-            //     var urlPattern = "*://www.twitch.tv/*" + stream + "*";
-            //     chrome.tabs.query({
-            //         url: urlPattern
-            //     }, function(tabs) {
-            //         chrome.tabs.remove(tabs[0].id);
-            //     });
-            // };
-        }
-    }
     //checks if current tab is a multistream and updates iscurrntmulti to true if is multi and updtes current tab to current tab if multi
     function checkIfMulti() {
         return new Promise(function(resolve, reject){
@@ -186,9 +177,9 @@
         function addButton(buttonId, buttonText) {
             buttonText = buttonText ? buttonText : buttonId;
             return `
-                <label class="btn btn-info">
-                    <input type=checkbox checked active autocomplete="off" id=${buttonId}> ${buttonText} </input>
-                </label>
+            <label class="btn btn-info active">
+                <input type=checkbox checked autocomplete="off" id=${buttonId}> ${buttonText} </input>
+            </label>
             `;
         }
         function addElement(elementType, text) {
@@ -239,15 +230,19 @@
     }
 
     $(document).ready(function() {
-        $('#makeStream').bind("click", makeMultiStream);
-        $('#refeshStreams').bind("click", updatePopUp);
-        // checkIfMulti();
-        // getTwitchStreams();
-        // window.setTimeout(updatePopUp, WAIT_TIME);
-
-        Promise.join(checkIfMulti(), getTwitchStreams(), function (multiRes, streams) {
-            updatePopUp(multiRes, streams)
-        })
+        function main() {
+            return Promise.join(checkIfMulti(), getTwitchStreams(), function (multiRes, streams) {
+                streams = streams.map(function (stream) {
+                    stream.streamName = getStreamName(stream.url);
+                    return stream;
+                });
+                var event_data = {multiRes: multiRes, streams: streams};
+                updatePopUp(multiRes, streams);
+                $('#makeStream').bind("click", event_data, makeMultiStream);
+            });
+        }
+        $('#refeshStreams').bind("click", main);
+        main();
     });
 
 }());
