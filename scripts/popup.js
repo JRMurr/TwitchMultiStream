@@ -55,9 +55,7 @@
             });
         }
         var includedTabs = filterArr(streamTabs, ID_PREFIX.TAB);
-
         var includedMutlti = filterArr(streamsInMulti, ID_PREFIX.MULTI);
-
         return {
             tabs: includedTabs,
             multi: includedMutlti
@@ -96,7 +94,6 @@
         }
         else {
             url = getMultiUrl(streamNames);
-            console.log(`url: ${url}`);
             if (url) {
                 chrome.tabs.create({
                     url: url
@@ -128,14 +125,14 @@
     }
 
     function listIncluded() {
-        function makeAlert(alertId, alertText, parent) {
+        function makeAlert(alertId, streamName, parent) {
             if (parent){
                 $(parent).on('close.bs.alert',`#${alertId}`, function () {
-                    console.log('close!!!!');
+                    setStreamIncluded(streamName, STREAM_SOURCE.TAB, true, false, true);
                 });
             }
             var alert = `<div class="alert alert-secondary alert-dismissible fade show " role="alert" id=${alertId}>
-            ${alertText}
+            ${streamName}
             <button type="button" class="close" data-dismiss="alert" aria-label="Close" id=${alertId}>
               <span aria-hidden="true">&times;</span>
             </button>
@@ -165,22 +162,20 @@
     }
 
     // sets the stream to be included or not in one or all of the possible stream source arrays
-    function setStreamIncluded(streamName, source, checkAll, boolToSet) {
-        console.log(`${streamName}\t${source}\t${checkAll}\t${boolToSet}`);
+    function setStreamIncluded(streamName, source, checkAll, boolToSet, updateButton) {
         function setInclude(arr) {
             var index = arr.findIndex(obj => obj.streamName === streamName);
             if (index < 0){
                 return arr;
             }
-            if (boolToSet === undefined) {
+            if (boolToSet === undefined || boolToSet === null) {
                 // toggle the include bool when a value is not passed
                 boolToSet = !arr[index].include;
             }
             arr[index].include = boolToSet;
 
             // update button to make apperance match include value
-            if (!checkAll) {
-                // when checkall is set this was fired with a clikc on the button so no need to change
+            if (updateButton || !checkAll) {
                 var labelId = `#label-${ID_PREFIX[source]}-${streamName}`;
                 if (boolToSet) {
                     $(labelId).addClass('active');
@@ -202,7 +197,6 @@
         } break;
         case STREAM_SOURCE.FOLLOW:{
             // throw `NOT supported yet`
-            console.log('good stuff');
         } break;
         default: {
             throw `${source} is not valid`;
@@ -220,7 +214,10 @@
 
     function updatePopUp(multiRes, streamTabs) {
         var popUpHtml;
-        function addButton(buttonId, streamName, parent, source) {
+        function addButton(buttonId, streamName, parent, source, include) {
+            if (include === undefined) {
+                include = AUTO_INCLUDE;
+            }
             streamName = streamName || buttonId;
             if (source){
                 $(parent).on('click',`#label-${buttonId}`, function () {
@@ -231,17 +228,15 @@
                 //when source not passed it is the close tabs button
                 $(parent).on('click',`#label-${buttonId}`, function () {
                     CLOSE_TABS = !CLOSE_TABS;
-                    console.log(`BOIS: ${CLOSE_TABS}`);
                 });
             }
-            return `<label class="btn btn-outline-primary ${AUTO_INCLUDE ? 'active' : ''}" id=label-${buttonId}>
-                    <input type=checkbox ${AUTO_INCLUDE ? 'checked' : ''} autocomplete="off" id=${buttonId}>${streamName}</input></label>`;
+            return `<label class="btn btn-outline-primary ${include ? 'active' : ''}" id=label-${buttonId}>
+                    <input type=checkbox ${include ? 'checked' : ''} autocomplete="off" id=${buttonId}>${streamName}</input></label>`;
         }
         if (multiRes.isMulti) {
-            console.log('aaaa');
             $('#pills-multi-tab').trigger('click');
             popUpHtml = multiRes.streamsInMulti.map(stream => 
-                addButton(`${ID_PREFIX.MULTI}-${stream.streamName}`, stream.streamName, '#multiStream', STREAM_SOURCE.MULTI)
+                addButton(`${ID_PREFIX.MULTI}-${stream.streamName}`, stream.streamName, '#multiStream', STREAM_SOURCE.MULTI, stream.include)
             ).join('');
 
             $('#multiStream').html(popUpHtml);
@@ -252,7 +247,7 @@
             popUpHtml = getHtmlElement('h6', 'No Stream tabs Opened');
         else if (streamTabs.length <= 6) {
             popUpHtml = streamTabs.map(stream => 
-                addButton(`${ID_PREFIX.TAB}-${stream.streamName}`, stream.streamName, '#checkedStreams', STREAM_SOURCE.TAB)
+                addButton(`${ID_PREFIX.TAB}-${stream.streamName}`, stream.streamName, '#checkedStreams', STREAM_SOURCE.TAB, stream.include)
             ).join('');
             popUpHtml += addButton('closeTab', 'Close streams?', '#checkedStreams');
         }
