@@ -3,14 +3,26 @@
 <head>
 	<title>Options</title>
 	<script src="scripts/jquery-3.3.1.min.js"></script>
+	<script src="scripts/bootstrap.min.js"></script>
+	<script src="scripts/bluebird.min.js"></script>
 	<script src="scripts/options.js"></script>
+	<link rel="stylesheet" href="bootstrap.min.darkly.css">
 </head>
 <body>
-	<!--<h4>Twitch Username <input type="text" id="TwitchUsername" /></h4> -->
-        
-    <h4>Favorite Channels <span style="font-weight:normal">(seperate each channel by a , you can also copy the url of a channel) </span><input type="text" id="Fav"/></h4>
-        
-<button id="savebutton" style="font-weight:bold">Save</button> 
+	<div class="container">
+	<form>
+		<div class="form-group">
+			<label for="twitchUsername">Twitch Username</label>
+			<input type="text" class="form-control" id="twitchUsername" aria-describedby="userHelp" placeholder="Enter Twitch Usename">
+			<small id="userHelp" class="form-text text-muted">This is used to get the streams you follow</small>
+		</div>
+		<div class="form-check">
+			<input type="checkbox" class="form-check-input" checked id="autoInclude">
+			<label class="form-check-label" for="autoInclude">Automatically include twitch tabs and the current streams in multistream when making/editing multistream</label>
+		</div>
+		<button type="button" class="btn btn-primary" id="saveButton">Save</button>
+		</form>
+	</div>
 </body>
 
 </html>

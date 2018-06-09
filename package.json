@@ -1,0 +1,27 @@
+{
+  "name": "twitch-mutli-stream-chrome",
+  "version": "2.0.0",
+  "description": "https://chrome.google.com/webstore/detail/twitch-multistream/mjaafpfnaeofaacnmkfdafldodlaomln/",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JohnReillyMurray/TwitchMultiStreamChromeExtension.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JohnReillyMurray/TwitchMultiStreamChromeExtension/issues"
+  },
+  "homepage": "https://github.com/JohnReillyMurray/TwitchMultiStreamChromeExtension#readme",
+  "devDependencies": {
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.12.0"
+  },
+  "dependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^16.1.0"
+  }
+}

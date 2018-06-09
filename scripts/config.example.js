@@ -1,3 +1,5 @@
-var config = {
-    CLIENT_ID: 'SOME_TWITCH_CLIENT_ID'
-}
+const config = {
+    CLIENT_ID: 'SOME_TWITCH_CLIENT_ID',
+    ClIENT_SECRET: 'SOME TWITCH SECRET',
+    GOOGLE_ID: 'GOOGLE ID'
+};
