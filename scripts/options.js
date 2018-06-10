@@ -14,7 +14,7 @@
                 toSave.twitchName = respData.login;
                 toSave.twitchId = respData.id;
             } else {
-                alert('Twitch name passed does not exits');
+                alert('Twitch name passed does not exist');
             }
             return chromeStorageSet(toSave);
         }).catch(function (err) {

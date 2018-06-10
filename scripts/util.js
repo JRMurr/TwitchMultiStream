@@ -1,5 +1,6 @@
 const ERRORS = {
-    'AUTH': 'Twitch auth error'
+    'AUTH': 'Twitch auth error',
+    'ID': 'Twitch ID not set'
 };
 
 function arrayUnique(array) {
@@ -55,10 +56,10 @@ function twitchGetAjax(apiPath, data, token) {
 
 //handles pagnation of twitch api
 function twitchGetAll(apiPath, data, token) {
-    function recursiveCall(callData,arr, total) {
-        if (total && arr.length < total) {
+    function recursiveCall(callData, arr, total) {
+        if (!total || arr.length < total) {
             return twitchGetAjax(apiPath, callData, token).then(function (res) {
-                arr.concat(res.data);
+                arr = arr.concat(res.data);
                 callData.after = res.pagination.cursor;
                 total = res.total;
                 return recursiveCall(callData, arr, total);
@@ -68,7 +69,7 @@ function twitchGetAll(apiPath, data, token) {
         }
     }
     data = data || {};
-    return recursiveCall(data);
+    return recursiveCall(data, []);
 }
 
 function twitchAuth(interactive) {

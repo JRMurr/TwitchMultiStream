@@ -217,27 +217,28 @@
         }
     }
 
+    function addButton(buttonId, streamName, parent, source, include) {
+        if (include === undefined) {
+            include = AUTO_INCLUDE;
+        }
+        streamName = streamName || buttonId;
+        if (source){
+            $(parent).on('click',`#label-${buttonId}`, function () {
+                setStreamIncluded(streamName, source, true);
+                listIncluded();
+            });
+        } else {
+            //when source not passed it is the close tabs button
+            $(parent).on('click',`#label-${buttonId}`, function () {
+                CLOSE_TABS = !CLOSE_TABS;
+            });
+        }
+        return `<label class="btn btn-outline-primary ${include ? 'active' : ''}" id=label-${buttonId}>
+                <input type=checkbox ${include ? 'checked' : ''} autocomplete="off" id=${buttonId}>${streamName}</input></label>`;
+    }
+
     function updatePopUp(multiRes, streamTabs) {
         var popUpHtml;
-        function addButton(buttonId, streamName, parent, source, include) {
-            if (include === undefined) {
-                include = AUTO_INCLUDE;
-            }
-            streamName = streamName || buttonId;
-            if (source){
-                $(parent).on('click',`#label-${buttonId}`, function () {
-                    setStreamIncluded(streamName, source, true);
-                    listIncluded();
-                });
-            } else {
-                //when source not passed it is the close tabs button
-                $(parent).on('click',`#label-${buttonId}`, function () {
-                    CLOSE_TABS = !CLOSE_TABS;
-                });
-            }
-            return `<label class="btn btn-outline-primary ${include ? 'active' : ''}" id=label-${buttonId}>
-                    <input type=checkbox ${include ? 'checked' : ''} autocomplete="off" id=${buttonId}>${streamName}</input></label>`;
-        }
         if (multiRes.isMulti) {
             $('#pills-multi-tab').trigger('click');
             popUpHtml = multiRes.streamsInMulti.map(stream => 
@@ -248,9 +249,10 @@
         } else {
             $('#pills-multi-tab').remove();
         }
-        if (streamTabs.length <= 0)
+
+        if (streamTabs.length <= 0){
             popUpHtml = getHtmlElement('h6', 'No Stream tabs Opened');
-        else if (streamTabs.length <= 6) {
+        } else if (streamTabs.length <= 6) {
             popUpHtml = streamTabs.map(stream => 
                 addButton(`${ID_PREFIX.TAB}-${stream.streamName}`, stream.streamName, '#checkedStreams', STREAM_SOURCE.TAB, stream.include)
             ).join('');
@@ -259,36 +261,86 @@
         $('#checkedStreams').html(popUpHtml);
         listIncluded();
     }
+
+    // Returns object with game name as key, and arrays of live channels as values
+    function getFollowedStreams() {
+        if (!TWITCH_ID){
+            throw ERRORS.ID;
+        }
+        var grouped;
+        return twitchGetAll('users/follows', {from_id: TWITCH_ID}, TWITCH_TOKEN).then(function (res) {
+            const followIds = _.chunk(res.map(elm => elm.to_id), 100);
+            return Promise.all(followIds.map(function (chunk) {
+                return twitchGetAjax('streams', {first: 100, user_id: chunk}, TWITCH_TOKEN);
+            }));
+        }).then(function (streamsResp) {
+            grouped = _.groupBy(_.flatten(streamsResp.map(arr => arr.data)), 'game_id');
+            const keys = _.chunk(_.keys(grouped), 100);
+            return Promise.all(keys.map(function (keyChunk) {
+                return twitchGetAjax('games', {id: keyChunk}, TWITCH_TOKEN);
+            }));
+        }).then(function (gamesResp) {
+            const games = _.flatten(gamesResp.map(arr => arr.data));
+            return _.mapKeys(grouped, function (value, gameId) {
+                return games.find(function (game) {
+                    return game.id === gameId;
+                }).name;
+            });
+        });
+
+    }
+
+    function setFollowedHtml() {
+        if (!TWITCH_ID) {
+            $('#followedStreams').html(getHtmlElement('h6', 'Twitch username not set, add it in the options page'));
+            return Promise.resolve();
+        }
+        
+        return getFollowedStreams().then(function (groupedStreams) {
+            var followedHtml;
+            const gameNames = _.sortBy(_.keys(groupedStreams));
+            $('#followedStreams').html(followedHtml);
+        });
+       
+    }
     
     $(document).ready(function() {
-        function main() {
+        function chromeStreams() {
             return chromeStorageGet(['autoInclude']).then(function (userConfig) {
                 AUTO_INCLUDE = userConfig.autoInclude !== undefined ? userConfig.autoInclude : true;
                 return Promise.join(checkIfMulti(), getTwitchTabs(), function (multiRes, streamTabs) {
                     STREAM_TABS = streamTabs;
                     MULTI_RES = multiRes;
                     updatePopUp(multiRes, streamTabs);
-                    $('#makeStream').bind('click', makeMultiStream);
                 });
             });
         }
-        $('#refeshStreams').bind('click', main);
-        main().then(function () {
-            return twitchAuth(false);
-        }).then(function (token) {
-            TWITCH_TOKEN = token;
-            return saveAuthInfo(token);
-        }).then(function (info) {
-            TWITCH_ID = info.twitchId;
-            TWITCH_NAME = info.TWITCH_NAME;
-        }).catch(function (err) {
-            // Error getting auth token from twitch so fall back to manually enterted info
-            return chromeStorageGet(['twitchId', 'twitchName']).then(function (userConfig) {
-                TWITCH_ID = userConfig.twitchId;
-                TWITCH_NAME = userConfig.twitchName;
+        function setUpTwitch() {
+            return twitchAuth(false).then(function (token) {
+                TWITCH_TOKEN = token;
+                return saveAuthInfo(token);
+            }).then(function (info) {
+                TWITCH_ID = info.twitchId;
+                TWITCH_NAME = info.TWITCH_NAME;
+            }).catch(function (err) {
+                // Error getting auth token from twitch so fall back to manually enterted info
+                return chromeStorageGet(['twitchId', 'twitchName']).then(function (userConfig) {
+                    TWITCH_ID = userConfig.twitchId;
+                    TWITCH_NAME = userConfig.twitchName;
+                });
+            }).finally(function () {
+                return setFollowedHtml();
             });
-        });
+        }
+        function main() {
+            return Promise.join(chromeStreams(), setUpTwitch(), function () {
+                $('#makeStream').bind('click', makeMultiStream);
+            });
+        }
 
+        main().then(function () {
+            $('#refeshStreams').bind('click', main);
+        });
     });
 
 }());
