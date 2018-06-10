@@ -1,16 +1,19 @@
 (function() {
-    var STREAM_TABS, MULTI_RES, CLOSE_TABS=true, AUTO_INCLUDE = true;
-
-    var STREAM_SOURCE = {
+    var STREAM_TABS, MULTI_RES, CLOSE_TABS=true, AUTO_INCLUDE = true,
+        TWITCH_TOKEN, TWITCH_ID, TWITCH_NAME;
+    
+    const STREAM_SOURCE = {
         TAB: 'TAB',
         MULTI: 'MULTI',
         FOLLOW: 'FOLLOW'
     };
-    var ID_PREFIX = {
+    const ID_PREFIX = {
         TAB: 'tab',
         MULTI: 'multi',
         FOLLOW: 'follow'
     };
+
+    const INVALID_NAMES = ['directory'];
 
     function getStreamName(url) {
         function parseQuery(queryString) {
@@ -40,7 +43,9 @@
                     include: AUTO_INCLUDE
                 };
             }).filter(function (tab) {
-                return tab.streamName.indexOf('/') === -1;
+                // if parsed name has slashes it is not a live stream
+                const name = tab.streamName;
+                return name.length >0 && name.indexOf('/') === -1 && INVALID_NAMES.indexOf(name) === -1;
             });
         });
     }
@@ -49,13 +54,13 @@
         //clone globals, it should not matter but doing it just to have minimal modifications to globals
         var streamsInMulti = MULTI_RES.streamsInMulti.slice();
         var streamTabs = STREAM_TABS.slice();
-        function filterArr(arr, idPrefix) {
+        function filterArr(arr) {
             return arr.filter(function (stream) {
                 return stream.include;
             });
         }
-        var includedTabs = filterArr(streamTabs, ID_PREFIX.TAB);
-        var includedMutlti = filterArr(streamsInMulti, ID_PREFIX.MULTI);
+        var includedTabs = filterArr(streamTabs);
+        var includedMutlti = filterArr(streamsInMulti);
         return {
             tabs: includedTabs,
             multi: includedMutlti
@@ -103,7 +108,7 @@
     }
 
     function checkIfMulti() {
-        return new Promise(function(resolve, reject){
+        return new Promise(function(resolve){
             chrome.tabs.getSelected(null, function(currTab) {
                 var parser = document.createElement('a');
                 parser.href = currTab.url;
@@ -158,7 +163,7 @@
     
     function getHtmlElement(elementType, text, end) {
         end = end || elementType;
-        return `<${elementType}>${text}</${elementType}>`;
+        return `<${elementType}>${text}</${end}>`;
     }
 
     // sets the stream to be included or not in one or all of the possible stream source arrays
@@ -189,18 +194,18 @@
         }
 
         switch (source) {
-        case STREAM_SOURCE.TAB: {
-            STREAM_TABS= setInclude(STREAM_TABS);
-        } break;
-        case STREAM_SOURCE.MULTI: {
-            MULTI_RES.streamsInMulti = setInclude(MULTI_RES.streamsInMulti);
-        } break;
-        case STREAM_SOURCE.FOLLOW:{
-            // throw `NOT supported yet`
-        } break;
-        default: {
-            throw `${source} is not valid`;
-        }
+            case STREAM_SOURCE.TAB: {
+                STREAM_TABS = setInclude(STREAM_TABS);
+            } break;
+            case STREAM_SOURCE.MULTI: {
+                MULTI_RES.streamsInMulti = setInclude(MULTI_RES.streamsInMulti);
+            } break;
+            case STREAM_SOURCE.FOLLOW:{
+                // throw `NOT supported yet`
+            } break;
+            default: {
+                throw `${source} is not valid`;
+            }
         }
 
         if (checkAll) {
@@ -257,8 +262,8 @@
     
     $(document).ready(function() {
         function main() {
-            return chromeStorageGet(['autoInclude']).then(function (userOptions) {
-                AUTO_INCLUDE = userOptions.autoInclude !== undefined ? userOptions.autoInclude : true;
+            return chromeStorageGet(['autoInclude']).then(function (userConfig) {
+                AUTO_INCLUDE = userConfig.autoInclude !== undefined ? userConfig.autoInclude : true;
                 return Promise.join(checkIfMulti(), getTwitchTabs(), function (multiRes, streamTabs) {
                     STREAM_TABS = streamTabs;
                     MULTI_RES = multiRes;
@@ -268,7 +273,22 @@
             });
         }
         $('#refeshStreams').bind('click', main);
-        main();
+        main().then(function () {
+            return twitchAuth(false);
+        }).then(function (token) {
+            TWITCH_TOKEN = token;
+            return saveAuthInfo(token);
+        }).then(function (info) {
+            TWITCH_ID = info.twitchId;
+            TWITCH_NAME = info.TWITCH_NAME;
+        }).catch(function (err) {
+            // Error getting auth token from twitch so fall back to manually enterted info
+            return chromeStorageGet(['twitchId', 'twitchName']).then(function (userConfig) {
+                TWITCH_ID = userConfig.twitchId;
+                TWITCH_NAME = userConfig.twitchName;
+            });
+        });
+
     });
 
 }());
@@ -289,6 +309,7 @@ var buttons = document.querySelectorAll('button');
 for (var i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener('click', trackButtonClick);
 }
+// eslint-disable-next-line no-unused-vars
 function trackButton(e) {
     _gaq.push(['_trackEvent', e.target.id, 'clicked']);
 }

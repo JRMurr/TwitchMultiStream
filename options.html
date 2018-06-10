@@ -2,14 +2,19 @@
 <html>
 <head>
 	<title>Options</title>
-	<script src="scripts/jquery-3.3.1.min.js"></script>
-	<script src="scripts/bootstrap.min.js"></script>
-	<script src="scripts/bluebird.min.js"></script>
+	<script src="scripts/lib/jquery-3.3.1.min.js"></script>
+	<script src="scripts/lib/bootstrap.min.js"></script>
+	<script src="scripts/lib/bluebird.min.js"></script>
+	<script src="scripts/util.js"></script>
+	<script src="scripts/config.js"></script>
 	<script src="scripts/options.js"></script>
 	<link rel="stylesheet" href="bootstrap.min.darkly.css">
 </head>
 <body>
 	<div class="container">
+		<p>Login with twitch so you are less likely to be rate limited when the extension retrieves the live streams you follow</p>
+		<p>Alternatively, you can just set your twitch username using the form below</p>
+		<button type="button" class="btn btn-primary" id="twitchLogin">Login With Twitch</button>
 	<form>
 		<div class="form-group">
 			<label for="twitchUsername">Twitch Username</label>
@@ -20,7 +25,11 @@
 			<input type="checkbox" class="form-check-input" checked id="autoInclude">
 			<label class="form-check-label" for="autoInclude">Automatically include twitch tabs and the current streams in multistream when making/editing multistream</label>
 		</div>
-		<button type="button" class="btn btn-primary" id="saveButton">Save</button>
+		<!-- <div class="form-check">
+			<input type="checkbox" class="form-check-input" checked id="autoInclude">
+			<label class="form-check-label" for="autoInclude">Automatically include twitch tabs and the current streams in multistream when making/editing multistream</label>
+		</div> -->
+			<button type="button" class="btn btn-primary" id="saveButton">Save</button>
 		</form>
 	</div>
 </body>
