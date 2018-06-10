@@ -83,11 +83,6 @@
 
         var included = getIncluded();
 
-        if (CLOSE_TABS) {
-            included.tabs.forEach(element => {
-                chrome.tabs.remove(element.id);
-            });
-        }
         var url;
         var streamNames = included.tabs.map(elm => elm.streamName);
         if (MULTI_RES.isMulti) {
@@ -104,6 +99,12 @@
                     url: url
                 });
             }
+        }
+
+        if (CLOSE_TABS) {
+            included.tabs.forEach(element => {
+                chrome.tabs.remove(element.id);
+            });
         }
     }
 
@@ -151,10 +152,16 @@
         var allStreams = arrayUnique(getNames(included.multi).concat(getNames(included.tabs)));
         var listHtml;
         if (allStreams.length) {
-            listHtml = getHtmlElement('h5', 'Included Streams') + 
+            listHtml = getHtmlElement('h5', 'Included Streams') + getHtmlElement('h6', 'Select 6 Streams') +
                        allStreams.map(stream => makeAlert(`alert-${stream}`, stream, '#includedStreams')).join('');
         } else {
             listHtml = getHtmlElement('h6', ' No Streams Included');
+        }
+
+        if (allStreams.length > 6) {
+            $('#makeStream').prop('disabled', true);
+        } else {
+            $('#makeStream').prop('disabled', false);
         }
 
         $('#includedStreams').html(listHtml);
@@ -164,6 +171,16 @@
     function getHtmlElement(elementType, text, end) {
         end = end || elementType;
         return `<${elementType}>${text}</${end}>`;
+    }
+
+    function setButtonUi(buttonId, setActive) {
+        const elm = $(buttonId);
+        elm.prop('checked', setActive);
+        if(setActive && !elm.hasClass('active')) {
+            elm.addClass('active');
+        } else if(!setActive && elm.hasClass('active')) {
+            elm.removeClass('active');
+        }
     }
 
     // sets the stream to be included or not in one or all of the possible stream source arrays
@@ -182,14 +199,8 @@
             // update button to make apperance match include value
             if (updateButton || !checkAll) {
                 var labelId = `#label-${ID_PREFIX[source]}-${streamName}`;
-                if (boolToSet) {
-                    $(labelId).addClass('active');
-                } else {
-                    $(labelId).removeClass('active');
-                }
-                $(`#${ID_PREFIX[source]}-${streamName}`).prop('checked', boolToSet);
+                setButtonUi(labelId, boolToSet);
             }
-            
             return arr;
         }
 
@@ -214,6 +225,7 @@
                     setStreamIncluded(streamName, STREAM_SOURCE[prop], null, boolToSet);
                 }
             }
+            listIncluded();
         }
     }
 
@@ -225,7 +237,6 @@
         if (source){
             $(parent).on('click',`#label-${buttonId}`, function () {
                 setStreamIncluded(streamName, source, true);
-                listIncluded();
             });
         } else {
             //when source not passed it is the close tabs button
@@ -233,7 +244,7 @@
                 CLOSE_TABS = !CLOSE_TABS;
             });
         }
-        return `<label class="btn btn-outline-primary ${include ? 'active' : ''}" id=label-${buttonId}>
+        return `<label class="btn btn-outline-info ${include ? 'active' : ''}" id=label-${buttonId}>
                 <input type=checkbox ${include ? 'checked' : ''} autocomplete="off" id=${buttonId}>${streamName}</input></label>`;
     }
 
@@ -252,13 +263,23 @@
 
         if (streamTabs.length <= 0){
             popUpHtml = getHtmlElement('h6', 'No Stream tabs Opened');
-        } else if (streamTabs.length <= 6) {
-            popUpHtml = streamTabs.map(stream => 
+            $('#label-closeTab').remove();
+
+        } else {
+            const streamTabButtons = streamTabs.map(stream => 
                 addButton(`${ID_PREFIX.TAB}-${stream.streamName}`, stream.streamName, '#checkedStreams', STREAM_SOURCE.TAB, stream.include)
-            ).join('');
-            popUpHtml += addButton('closeTab', 'Close streams?', '#checkedStreams');
+            );
+            const chunkedButtons = _.chunk(streamTabButtons, 3);
+            const buttonGroups = chunkedButtons.map(function (chunk, index) {
+                return getHtmlElement('div class="btn-group-toggle btn-group streamButtons" data-toggle="buttons"', chunk.join(''), 'div');
+            });
+            popUpHtml = buttonGroups.join('');
+            // popUpHtml += addButton('closeTab', 'Close streams?', '#checkedStreams');
+            $('#label-closeTab').bind('click', function name() {
+                CLOSE_TABS = !CLOSE_TABS;
+            });
         }
-        $('#checkedStreams').html(popUpHtml);
+        $('#checkedStreams').prepend(popUpHtml);
         listIncluded();
     }
 

@@ -2,3 +2,21 @@
     /* display:inline-block; */
     margin: 0px;
 }
+
+/* .nav-pills .nav-link {
+    margin: 10px;
+} */
+
+#pills-tabContent {
+    margin-top: 5px;
+}
+
+.actionButtons{
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.streamButtons{
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
