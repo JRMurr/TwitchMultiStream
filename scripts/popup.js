@@ -1,5 +1,5 @@
 (function() {
-    var STREAM_TABS, MULTI_RES, CLOSE_TABS=true, AUTO_INCLUDE = true,
+    var STREAM_TABS, MULTI_RES, LIVE_STREAMS, CLOSE_TABS=true, AUTO_INCLUDE = true,
         TWITCH_TOKEN, TWITCH_ID, TWITCH_NAME;
     
     const STREAM_SOURCE = {
@@ -52,19 +52,18 @@
 
     function getIncluded() {
         //clone globals, it should not matter but doing it just to have minimal modifications to globals
-        var streamsInMulti = MULTI_RES.streamsInMulti.slice();
-        var streamTabs = STREAM_TABS.slice();
+        const streamsInMulti = MULTI_RES.streamsInMulti.slice();
+        const streamTabs = STREAM_TABS.slice();
+        const liveStreams = LIVE_STREAMS ? LIVE_STREAMS.slice() : [];
         function filterArr(arr) {
             return arr.filter(function (stream) {
                 return stream.include;
-            });
+            }).map(stream => stream.streamName);
         }
-        var includedTabs = filterArr(streamTabs);
-        var includedMutlti = filterArr(streamsInMulti);
-        return {
-            tabs: includedTabs,
-            multi: includedMutlti
-        };
+        const includedTabs = filterArr(streamTabs);
+        const includedMutlti = filterArr(streamsInMulti);
+        const includedFollows = filterArr(liveStreams);
+        return _.uniq(includedTabs.concat(includedMutlti).concat(includedFollows));
     }
 
     function makeMultiStream() {
@@ -83,18 +82,13 @@
 
         var included = getIncluded();
 
-        var url;
-        var streamNames = included.tabs.map(elm => elm.streamName);
+        const url = getMultiUrl(included);
         if (MULTI_RES.isMulti) {
-            streamNames = included.multi.map(elm => elm.streamName).concat(streamNames);
-            var allStreams = arrayUnique(streamNames);
-            url = getMultiUrl(allStreams);
             chrome.tabs.update(MULTI_RES.currentTab.id, {
                 url: url
             });
         }
         else {
-            url = getMultiUrl(streamNames);
             if (url) {
                 chrome.tabs.create({
                     url: url
@@ -150,7 +144,8 @@
             return arr.map(elm => elm.streamName);
         }
         var included = getIncluded();
-        var allStreams = arrayUnique(getNames(included.multi).concat(getNames(included.tabs)));
+
+        const allStreams = included;
         var listHtml;
         if (allStreams.length) {
             listHtml = getHtmlElement('h5', 'Included Streams') + getHtmlElement('h6', 'Select 6 Streams') +
@@ -213,7 +208,10 @@
                 MULTI_RES.streamsInMulti = setInclude(MULTI_RES.streamsInMulti);
             } break;
             case STREAM_SOURCE.FOLLOW:{
-                // throw `NOT supported yet`
+                // since async could take a while make sure response is there before doing anything
+                if (LIVE_STREAMS) {
+                    LIVE_STREAMS = setInclude(LIVE_STREAMS);
+                }
             } break;
             default: {
                 throw `${source} is not valid`;
@@ -239,25 +237,22 @@
             $(parent).on('click',`#label-${buttonId}`, function () {
                 setStreamIncluded(streamName, source, true);
             });
-        } else {
-            //when source not passed it is the close tabs button
-            $(parent).on('click',`#label-${buttonId}`, function () {
-                CLOSE_TABS = !CLOSE_TABS;
-            });
         }
         return `<label class="btn btn-outline-info ${include ? 'active' : ''}" id=label-${buttonId}>
                 <input type=checkbox ${include ? 'checked' : ''} autocomplete="off" id=${buttonId}>${streamName}</input></label>`;
     }
 
+    function displayButtons(buttonArr) {
+        const chunkedButtons = _.chunk(buttonArr, 3);
+        const buttonGroups = chunkedButtons.map(function (chunk, index) {
+            return getHtmlElement('div class="btn-group-toggle btn-group streamButtons" data-toggle="buttons"', chunk.join(''), 'div');
+        });
+        return buttonGroups.join('');
+    }
+
     function updatePopUp(multiRes, streamTabs) {
         var popUpHtml;
-        function displayButtons(buttonArr) {
-            const chunkedButtons = _.chunk(buttonArr, 3);
-            const buttonGroups = chunkedButtons.map(function (chunk, index) {
-                return getHtmlElement('div class="btn-group-toggle btn-group streamButtons" data-toggle="buttons"', chunk.join(''), 'div');
-            });
-            return buttonGroups.join('');
-        }
+
         if (multiRes.isMulti) {
             $('#pills-multi-tab').trigger('click');
             const streamMultiButtons = multiRes.streamsInMulti.map(stream => 
@@ -303,7 +298,6 @@
             }));
         }).then(function (streamsResp) {
             liveStreams = flattenResponse(streamsResp);
-
             const channelIds = _.chunk(liveStreams.map(channel => channel.user_id), 100);
             const keys = _.chunk(liveStreams.map(channel => channel.game_id), 100);
 
@@ -328,7 +322,8 @@
                     return {
                         streamName: channelInfo.login,
                         gameName: gameInfo.name,
-                        viewers: stream.viewer_count
+                        viewers: stream.viewer_count,
+                        include: false
                     };
                 });
             });
@@ -342,9 +337,20 @@
             return Promise.resolve();
         }
         
-        return getFollowedStreams(TWITCH_ID, TWITCH_TOKEN).then(function (groupedStreams) {
-            var followedHtml;
+        return getFollowedStreams(TWITCH_ID, TWITCH_TOKEN).then(function (followedStreams) {
             
+            LIVE_STREAMS = followedStreams;
+            const groupedStreams = _.groupBy(followedStreams, 'gameName');
+            const games = _.sortBy(_.keys(groupedStreams));
+            var followedHtml = games.map(function (gameName) {
+                const gameStreams = groupedStreams[gameName];
+                const streamButtons = gameStreams.map(stream => 
+                    addButton(`${ID_PREFIX.FOLLOW}-${stream.streamName}`, stream.streamName, '#followedStreams', STREAM_SOURCE.FOLLOW, stream.include)
+                ).join('');
+                const header = getHtmlElement('h6', gameName);
+                const buttonContainer = getHtmlElement('div class="btn-group-toggle btn-group streamButtons" data-toggle="buttons"', streamButtons, 'div');
+                return header + buttonContainer;
+            }).join('');
             $('#followedStreams').html(followedHtml);
         });
        
