@@ -24,14 +24,14 @@
         <div class="row">
             <div class="col">
                 <div class="nav nav-pills" id="pills-tab" role="tablist">
-                    <a class="nav-link active" id="pills-tabs-tab" data-toggle="pill" href="#pills-tabs" role="tab" aria-controls="pills-tabs" aria-selected="true">Twitch Tabs</a>
                     <a class="nav-link" id="pills-multi-tab" data-toggle="pill" href="#pills-multi" role="tab" aria-controls="pills-multi" aria-selected="false">In Multi</a>
+                    <a class="nav-link active" id="pills-tabs-tab" data-toggle="pill" href="#pills-tabs" role="tab" aria-controls="pills-tabs" aria-selected="true">Twitch Tabs</a>
                     <a class="nav-link" id="pills-follow-tab" data-toggle="pill" href="#pills-follow" role="tab" aria-controls="pills-follow" aria-selected="false">Followed Streams</a>
                 </div>
             </div>
         </div>
         <div class="row">
-            <div class="col-7">
+            <div class="col-8">
                 <div class="tab-content" id="pills-tabContent">
                     <div class="tab-pane show active" id="pills-tabs" role="tabpanel" aria-labelledby="pills-tabs-tab">
                         <div class="btn-toolbar" role="toolbar">
@@ -42,17 +42,16 @@
                                 </label>
                             </div>
                         </div>
-                        
                     </div>
                     <div class="tab-pane" id="pills-follow" role="tabpanel" aria-labelledby="pills-follow-tab">
                         <div id="followedStreams"></div>
                     </div>
                     <div class="tab-pane" id="pills-multi" role="tabpanel" aria-labelledby="pills-multi-tab">
-                        <div id="multiStream" class="btn-group-toggle btn-group-vertical" data-toggle="buttons"></div>
+                        <div id="multiStream" class="btn-toolbar" role="toolbar"></div>
                     </div>
                 </div>
             </div> 
-            <div class="col-5">
+            <div class="col-4">
                 <div id="includedStreams" ></div>
             </div>
         </div>
