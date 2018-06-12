@@ -1,67 +1,50 @@
 (function() {
- 
-    "use strict";
- 
-    var twitchUsernameInput;
-    var saveButton;
-    var favStreams;
- 
+
     function save() {
-        //chrome.storage.local.set({'accountName':twitchUsernameInput.value}) 
-        //localStorage["accountName"] = twitchUsernameInput.value;
-        var tempFavArray = favStreams.value.replace(/\s+/g, '').split(","); //removes spaces then makes array of each stream
-      
-        for (var i = tempFavArray.length - 1; i >= 0; i--) {
-        	tempFavArray[i] = getStreamName(tempFavArray[i]); //trims url if there is one
+        var twitchName = $('#twitchUsername').val().trim();
+        var autoIncludeVal = $('#autoInclude').prop('checked');
+        var toSave = {autoInclude: autoIncludeVal};
+        var twitchPromise = Promise.resolve();
+        if (twitchName.length) {
+            twitchPromise = twitchGetAjax('users', {login: twitchName});
         }
-        localStorage["favStreams"] =  tempFavArray.join(","); //converts array back to string with ',' between each elm
-        console.log("saved");
+        return twitchPromise.then(function (twitchResp) {
+            if (twitchResp && twitchResp.data.length > 0) {
+                const respData = twitchResp.data[0];
+                toSave.twitchName = respData.login;
+                toSave.twitchId = respData.id;
+            } else {
+                alert('Twitch name passed does not exist');
+            }
+            return chromeStorageSet(toSave);
+        }).catch(function (err) {
+            alert('Error connecting to twitch api');
+            return chromeStorageSet(toSave);
+        });
+        
     }
- 
+
+    function twitchLogin() {
+        return twitchAuth(true)
+            .then(saveAuthInfo)
+            .then(function (info) {
+                $('#twitchUsername').val(info.twitchName);
+            });
+    }
 
 
-    function getStreamName(url) {
-    var temp = url;
-    temp = temp.replace("http://www.twitch.tv/", '');
-    temp = temp.replace("https://www.twitch.tv/", '');
-    temp = temp.replace("www.twitch.tv/", '');
-    var extraIndex = temp.indexOf("#");
-    if (extraIndex !== -1)
-        temp = temp.substring(0, extraIndex);
-    var popoutIndex = temp.indexOf("/popout")
-    if (popoutIndex !== -1)
-        temp = temp.substring(0, popoutIndex);
-    return temp.trim(); 
-	}
-
-    function initiate() {
-        //var accountName = localStorage['accountName']; //accountname stored in memory
-        var savedFavStreams = localStorage['favStreams']; //fav streams saved in memory
-        // chrome.storage.local.get('accountName',function(accountName){
- 
-        //  twitchUsernameInput = document.getElementById("TwitchUsername");
- 
-        //  if (accountName) {
-        //     twitchUsernameInput.value = accountName;
-        // }
-        // });
- 
-        //twitchUsernameInput = document.getElementById("TwitchUsername");
-        favStreams = document.getElementById("Fav");
- 
-        //if (accountName) {
-        //  twitchUsernameInput.value = accountName;
-        //}
-        if (savedFavStreams) {
-            favStreams.value = savedFavStreams;
-        }
+    function init() {
+        chromeStorageGet(['twitchName','autoInclude']).then(function (ret) {
+            $('#twitchUsername').val(ret.twitchName);
+            $('#autoInclude').prop('checked', ret.autoInclude);
+        });
     }
 
     $(document)
         .ready(function() {
-            initiate();
-            $('#savebutton')
-                .bind("click", save);
+            init();
+            $('#saveButton').bind('click', save);
+            $('#twitchLogin').bind('click', twitchLogin);
         });
  
 }());

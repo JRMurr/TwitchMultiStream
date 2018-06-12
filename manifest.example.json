@@ -1,12 +1,12 @@
 {
 
   "name": "Twitch multistream",
-  "version": "1.701.21",
+  "version": "2.0.0",
   "manifest_version": 2,
   "description": "Twitch multistream lets you easily make a multistream of all your favorite twitch streamers",
-  "content_security_policy": "script-src 'self' 'unsafe-eval' https://api.twitch.tv; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
   "options_page": "options.html",
-  "homepage_url":"https://chrome.google.com/webstore/detail/twitch-multistream/mjaafpfnaeofaacnmkfdafldodlaomln",
+  "key": "<Find key from https://developer.chrome.com/apps/app_identity>",
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
