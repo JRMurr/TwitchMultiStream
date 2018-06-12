@@ -338,7 +338,16 @@
         }
         
         return getFollowedStreams(TWITCH_ID, TWITCH_TOKEN).then(function (followedStreams) {
-            
+            const currentIncluded = getIncluded();
+            followedStreams = followedStreams.map(function (stream) {
+                var foundStream = currentIncluded.find(function (included) {
+                    return included === stream.streamName;
+                });
+                if (foundStream) {
+                    stream.include = true;
+                }
+                return stream;
+            });
             LIVE_STREAMS = followedStreams;
             const groupedStreams = _.groupBy(followedStreams, 'gameName');
             const games = _.sortBy(_.keys(groupedStreams));
@@ -346,10 +355,9 @@
                 const gameStreams = groupedStreams[gameName];
                 const streamButtons = gameStreams.map(stream => 
                     addButton(`${ID_PREFIX.FOLLOW}-${stream.streamName}`, stream.streamName, '#followedStreams', STREAM_SOURCE.FOLLOW, stream.include)
-                ).join('');
+                );
                 const header = getHtmlElement('h6', gameName);
-                const buttonContainer = getHtmlElement('div class="btn-group-toggle btn-group streamButtons" data-toggle="buttons"', streamButtons, 'div');
-                return header + buttonContainer;
+                return header + displayButtons(streamButtons);
             }).join('');
             $('#followedStreams').html(followedHtml);
         });
