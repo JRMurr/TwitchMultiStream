@@ -76,7 +76,6 @@
                 var layoutNumber = streamNameArr.length * 3;
                 var multistreamLink = 'http://multistre.am/';
                 multistreamLink += streamNameArr.join('/');
-                multistreamLink += '/layout' + layoutNumber;
                 return multistreamLink;
             } else if (streamNameArr.length > 6){
                 alert('Cant have more then 6 streams in a multistream, uncheck some streams');
