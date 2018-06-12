@@ -1,11 +1,6 @@
 .alert {
-    /* display:inline-block; */
-    margin: 0px;
+    margin: 2px;
 }
-
-/* .nav-pills .nav-link {
-    margin: 10px;
-} */
 
 #pills-tabContent {
     margin-top: 5px;

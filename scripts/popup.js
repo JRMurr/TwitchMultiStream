@@ -132,7 +132,7 @@
                     setStreamIncluded(streamName, STREAM_SOURCE.TAB, true, false, true);
                 });
             }
-            var alert = `<div class="alert alert-secondary alert-dismissible fade show " role="alert" id=${alertId}>
+            var alert = `<div class="alert alert-secondary alert-dismissible fade show w-100 text-center" role="alert" id=${alertId}>
             ${streamName}
             <button type="button" class="close" data-dismiss="alert" aria-label="Close" id=${alertId}>
               <span aria-hidden="true">&times;</span>
