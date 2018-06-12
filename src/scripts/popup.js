@@ -147,7 +147,6 @@
         }
 
         var included = getIncluded();
-        console.log(`~~~~~~~~~~~~~~~~~~~${JSON.stringify(included, null, 4)}~~~~~~~~~~~~~~~~~~~`);
         included = getStreamNames(included);
 
         const allStreams = included;
