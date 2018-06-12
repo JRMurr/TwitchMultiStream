@@ -39,7 +39,7 @@
             return tabs.map(function (tab) {
                 return {
                     streamName: getStreamName(tab.url),
-                    id: tab.id,
+                    tabId: tab.id,
                     include: AUTO_INCLUDE
                 };
             }).filter(function (tab) {
@@ -58,12 +58,16 @@
         function filterArr(arr) {
             return arr.filter(function (stream) {
                 return stream.include;
-            }).map(stream => stream.streamName);
+            });
         }
         const includedTabs = filterArr(streamTabs);
         const includedMutlti = filterArr(streamsInMulti);
         const includedFollows = filterArr(liveStreams);
-        return _.uniq(includedTabs.concat(includedMutlti).concat(includedFollows));
+        return _.uniqBy(includedTabs.concat(includedMutlti).concat(includedFollows), 'streamName');
+    }
+
+    function getStreamNames(arr) {
+        return arr.map(elm => elm.streamName);
     }
 
     function makeMultiStream() {
@@ -80,9 +84,8 @@
             }
         }
 
-        var included = getIncluded();
-
-        const url = getMultiUrl(included);
+        const included = getIncluded();
+        const url = getMultiUrl(getStreamNames(included));
         if (MULTI_RES.isMulti) {
             chrome.tabs.update(MULTI_RES.currentTab.id, {
                 url: url
@@ -97,8 +100,10 @@
         }
 
         if (CLOSE_TABS) {
-            included.tabs.forEach(element => {
-                chrome.tabs.remove(element.id);
+            included.forEach(element => {
+                if (element.tabId) {
+                    chrome.tabs.remove(element.tabId);
+                }
             });
         }
     }
@@ -140,10 +145,10 @@
           </div>`;
             return `<div class="row">${alert}</div>`;
         }
-        function getNames(arr) {
-            return arr.map(elm => elm.streamName);
-        }
+
         var included = getIncluded();
+        console.log(`~~~~~~~~~~~~~~~~~~~${JSON.stringify(included, null, 4)}~~~~~~~~~~~~~~~~~~~`);
+        included = getStreamNames(included);
 
         const allStreams = included;
         var listHtml;
@@ -245,7 +250,7 @@
     function displayButtons(buttonArr) {
         const chunkedButtons = _.chunk(buttonArr, 3);
         const buttonGroups = chunkedButtons.map(function (chunk, index) {
-            return getHtmlElement('div class="btn-group-toggle btn-group streamButtons" data-toggle="buttons"', chunk.join(''), 'div');
+            return getHtmlElement('div class="btn-group-toggle btn-group streamButtons mr-2" role="group"  data-toggle="buttons"', chunk.join(''), 'div');
         });
         return buttonGroups.join('');
     }
@@ -338,7 +343,7 @@
         }
         
         return getFollowedStreams(TWITCH_ID, TWITCH_TOKEN).then(function (followedStreams) {
-            const currentIncluded = getIncluded();
+            const currentIncluded = getStreamNames(getIncluded());
             followedStreams = followedStreams.map(function (stream) {
                 var foundStream = currentIncluded.find(function (included) {
                     return included === stream.streamName;
