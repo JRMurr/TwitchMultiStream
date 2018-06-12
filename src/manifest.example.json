@@ -6,7 +6,7 @@
   "description": "Twitch multistream lets you easily make a multistream of all your favorite twitch streamers",
   "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
   "options_page": "options.html",
-  "key": "<Find key from https://developer.chrome.com/apps/app_identity>",
+  "key": "<Find key from https://developer.chrome.com/apps/manifest/key>",
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
@@ -20,6 +20,7 @@
   "permissions": [
     "storage",
     "tabs",
+    "identity",
     "http://kbmod.com/multistream/*",
     "https://api.twitch.tv/*",
     "http://twitch.tv/*"
