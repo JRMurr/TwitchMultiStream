@@ -361,8 +361,12 @@
             }).join('');
             $('#followedStreams').html(followedHtml);
         }).catch(function (err) {
-            const errHtml = getHtmlElement('h4', 'Twitch API Rate Limited') + getHtmlElement('h6', 'Try again later or do a full login with twitch in the options page');
-            $('#followedStreams').html(errHtml);
+            if (err.status == 429) {
+                const errHtml = getHtmlElement('h4', 'Twitch API Rate Limited') + getHtmlElement('h6', 'Try again later or do a full login with twitch in the options page');
+                $('#followedStreams').html(errHtml);
+            } else{
+                throw err;
+            }
         });
        
     }
