@@ -1,12 +1,12 @@
-(function() {
+(function () {
 
     function save() {
         var twitchName = $('#twitchUsername').val().trim();
         var autoIncludeVal = $('#autoInclude').prop('checked');
-        var toSave = {autoInclude: autoIncludeVal};
+        var toSave = { autoInclude: autoIncludeVal };
         var twitchPromise = Promise.resolve();
         if (twitchName.length) {
-            twitchPromise = twitchGetAjax('users', {login: twitchName});
+            twitchPromise = twitchGetAjax('users', { login: twitchName });
         }
         return twitchPromise.then(function (twitchResp) {
             if (twitchResp && twitchResp.data.length > 0) {
@@ -21,7 +21,7 @@
             alert('Error connecting to twitch api');
             return chromeStorageSet(toSave);
         });
-        
+
     }
 
     function twitchLogin() {
@@ -34,17 +34,17 @@
 
 
     function init() {
-        chromeStorageGet(['twitchName','autoInclude']).then(function (ret) {
+        chromeStorageGet(['twitchName', 'autoInclude']).then(function (ret) {
             $('#twitchUsername').val(ret.twitchName);
             $('#autoInclude').prop('checked', ret.autoInclude);
         });
     }
 
     $(document)
-        .ready(function() {
+        .ready(function () {
             init();
             $('#saveButton').bind('click', save);
             $('#twitchLogin').bind('click', twitchLogin);
         });
- 
+
 }());

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>Options</title>
 	<script src="scripts/lib/jquery-3.3.1.min.js"></script>
@@ -8,23 +9,25 @@
 	<script src="scripts/util.js"></script>
 	<script src="scripts/config.js"></script>
 	<script src="scripts/options.js"></script>
-	<link rel="stylesheet" href="bootstrap.min.darkly.css">
+	<link rel="stylesheet" href="css/bootstrap.min.darkly.css">
 </head>
+
 <body>
 	<div class="container">
-		<p>Login with twitch so you are less likely to be rate limited when the extension retrieves the live streams you follow</p>
-		<p>Alternatively, you can just set your twitch username using the form below</p>
+		<p>Login with twitch to retrieve the live streams you follow</p>
 		<button type="button" class="btn btn-primary" id="twitchLogin">Login With Twitch</button>
-	<form>
-		<div class="form-group">
-			<label for="twitchUsername">Twitch Username</label>
-			<input type="text" class="form-control" id="twitchUsername" aria-describedby="userHelp" placeholder="Enter Twitch Usename">
-			<small id="userHelp" class="form-text text-muted">This is used to get the streams you follow</small>
-		</div>
-		<div class="form-check">
-			<input type="checkbox" class="form-check-input" checked id="autoInclude">
-			<label class="form-check-label" for="autoInclude">Automatically include twitch tabs and the current streams in multistream when making/editing multistream</label>
-		</div>
+		<form>
+			<div class="form-group">
+				<label for="twitchUsername">Twitch Username</label>
+				<input type="text" class="form-control" id="twitchUsername" aria-describedby="userHelp"
+					placeholder="Enter Twitch Usename">
+				<small id="userHelp" class="form-text text-muted">This is used to get the streams you follow</small>
+			</div>
+			<div class="form-check">
+				<input type="checkbox" class="form-check-input" checked id="autoInclude">
+				<label class="form-check-label" for="autoInclude">Automatically include twitch tabs and the current
+					streams in multistream when making/editing multistream</label>
+			</div>
 			<button type="button" class="btn btn-primary" id="saveButton">Save</button>
 		</form>
 	</div>
