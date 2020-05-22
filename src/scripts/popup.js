@@ -1,7 +1,7 @@
-(function() {
-    var STREAM_TABS, MULTI_RES, LIVE_STREAMS, CLOSE_TABS=true, AUTO_INCLUDE = true,
+(function () {
+    var STREAM_TABS, MULTI_RES, LIVE_STREAMS, CLOSE_TABS = true, AUTO_INCLUDE = true,
         TWITCH_TOKEN, TWITCH_ID, TWITCH_NAME;
-    
+
     const STREAM_SOURCE = {
         TAB: 'TAB',
         MULTI: 'MULTI',
@@ -26,7 +26,7 @@
             return query;
         }
         var tmp = document.createElement('a');
-        tmp.href = url.replace('#','');
+        tmp.href = url.replace('#', '');
 
         var query = parseQuery(tmp.search);
         return query.channel ? query.channel : tmp.pathname.substring(1);
@@ -45,7 +45,7 @@
             }).filter(function (tab) {
                 // if parsed name has slashes it is not a live stream
                 const name = tab.streamName;
-                return name.length >0 && name.indexOf('/') === -1 && INVALID_NAMES.indexOf(name) === -1;
+                return name.length > 0 && name.indexOf('/') === -1 && INVALID_NAMES.indexOf(name) === -1;
             });
         });
     }
@@ -77,7 +77,7 @@
                 var multistreamLink = 'http://multistre.am/';
                 multistreamLink += streamNameArr.join('/');
                 return multistreamLink;
-            } else if (streamNameArr.length > 6){
+            } else if (streamNameArr.length > 6) {
                 alert('Cant have more then 6 streams in a multistream, uncheck some streams');
                 return;
             }
@@ -108,11 +108,11 @@
     }
 
     function checkIfMulti() {
-        return new Promise(function(resolve){
-            chrome.tabs.getSelected(null, function(currTab) {
+        return new Promise(function (resolve) {
+            chrome.tabs.getSelected(null, function (currTab) {
                 var parser = document.createElement('a');
                 parser.href = currTab.url;
-                var ret = {isMulti: parser.hostname === 'multistre.am', currentTab: currTab, streamsInMulti:[]};
+                var ret = { isMulti: parser.hostname === 'multistre.am', currentTab: currTab, streamsInMulti: [] };
                 if (ret.isMulti) {
                     var urlPath = parser.pathname.substring(1);
                     ret.streamsInMulti = urlPath.split('/').filter(function (elm) {
@@ -131,8 +131,8 @@
 
     function listIncluded() {
         function makeAlert(alertId, streamName, parent) {
-            if (parent){
-                $(parent).on('close.bs.alert',`#${alertId}`, function () {
+            if (parent) {
+                $(parent).on('close.bs.alert', `#${alertId}`, function () {
                     setStreamIncluded(streamName, STREAM_SOURCE.TAB, true, false, true);
                 });
             }
@@ -152,7 +152,7 @@
         var listHtml;
         if (allStreams.length) {
             listHtml = getHtmlElement('h5', 'Included Streams') + getHtmlElement('h6', 'Select 6 Streams') +
-                       allStreams.map(stream => makeAlert(`alert-${stream}`, stream, '#includedStreams')).join('');
+                allStreams.map(stream => makeAlert(`alert-${stream}`, stream, '#includedStreams')).join('');
         } else {
             listHtml = getHtmlElement('h6', ' No Streams Included');
         }
@@ -166,7 +166,7 @@
         $('#includedStreams').html(listHtml);
     }
 
-    
+
     function getHtmlElement(elementType, text, end) {
         end = end || elementType;
         return `<${elementType}>${text}</${end}>`;
@@ -175,9 +175,9 @@
     function setButtonUi(buttonId, setActive) {
         const elm = $(buttonId);
         elm.prop('checked', setActive);
-        if(setActive && !elm.hasClass('active')) {
+        if (setActive && !elm.hasClass('active')) {
             elm.addClass('active');
-        } else if(!setActive && elm.hasClass('active')) {
+        } else if (!setActive && elm.hasClass('active')) {
             elm.removeClass('active');
         }
     }
@@ -186,7 +186,7 @@
     function setStreamIncluded(streamName, source, checkAll, boolToSet, updateButton) {
         function setInclude(arr) {
             var index = arr.findIndex(obj => obj.streamName === streamName);
-            if (index < 0){
+            if (index < 0) {
                 return arr;
             }
             if (boolToSet === undefined || boolToSet === null) {
@@ -210,7 +210,7 @@
             case STREAM_SOURCE.MULTI: {
                 MULTI_RES.streamsInMulti = setInclude(MULTI_RES.streamsInMulti);
             } break;
-            case STREAM_SOURCE.FOLLOW:{
+            case STREAM_SOURCE.FOLLOW: {
                 // since async could take a while make sure response is there before doing anything
                 if (LIVE_STREAMS) {
                     LIVE_STREAMS = setInclude(LIVE_STREAMS);
@@ -236,8 +236,8 @@
             include = AUTO_INCLUDE;
         }
         streamName = streamName || buttonId;
-        if (source){
-            $(parent).on('click',`#label-${buttonId}`, function () {
+        if (source) {
+            $(parent).on('click', `#label-${buttonId}`, function () {
                 setStreamIncluded(streamName, source, true);
             });
         }
@@ -258,7 +258,7 @@
 
         if (multiRes.isMulti) {
             $('#pills-multi-tab').trigger('click');
-            const streamMultiButtons = multiRes.streamsInMulti.map(stream => 
+            const streamMultiButtons = multiRes.streamsInMulti.map(stream =>
                 addButton(`${ID_PREFIX.MULTI}-${stream.streamName}`, stream.streamName, '#multiStream', STREAM_SOURCE.MULTI, stream.include)
             );
             popUpHtml = displayButtons(streamMultiButtons);
@@ -268,12 +268,12 @@
             $('#pills-multi-tab').remove();
         }
 
-        if (streamTabs.length <= 0){
+        if (streamTabs.length <= 0) {
             popUpHtml = getHtmlElement('h6', 'No Stream tabs Opened');
             $('#label-closeTab').remove();
 
         } else {
-            const streamTabButtons = streamTabs.map(stream => 
+            const streamTabButtons = streamTabs.map(stream =>
                 addButton(`${ID_PREFIX.TAB}-${stream.streamName}`, stream.streamName, '#checkedStreams', STREAM_SOURCE.TAB, stream.include)
             );
             popUpHtml = displayButtons(streamTabButtons);
@@ -290,14 +290,14 @@
         function flattenResponse(respArr) {
             return _.flatten(respArr.map(arr => arr.data));
         }
-        if (!twitch_id){
+        if (!twitch_id) {
             throw ERRORS.ID;
         }
         var liveStreams;
-        return twitchGetAll('users/follows', {from_id: twitch_id}, twitch_token).then(function (res) {
+        return twitchGetAll('users/follows', { from_id: twitch_id }, twitch_token).then(function (res) {
             const followIds = _.chunk(res.map(elm => elm.to_id), 100);
             return streamPromise = Promise.all(followIds.map(function (chunk) {
-                return twitchGetAjax('streams', {first: 100, user_id: chunk}, twitch_token);
+                return twitchGetAjax('streams', { first: 100, user_id: chunk }, twitch_token);
             }));
         }).then(function (streamsResp) {
             liveStreams = flattenResponse(streamsResp);
@@ -305,16 +305,16 @@
             const keys = _.chunk(liveStreams.map(channel => channel.game_id), 100);
 
             var gamePromise = Promise.all(keys.map(function (keyChunk) {
-                return twitchGetAjax('games', {id: keyChunk}, twitch_token);
+                return twitchGetAjax('games', { id: keyChunk }, twitch_token);
             }));
 
             var channelPromise = Promise.all(channelIds.map(function (chunk) {
-                return twitchGetAjax('users', {first: 100, id: chunk}, twitch_token);
+                return twitchGetAjax('users', { first: 100, id: chunk }, twitch_token);
             }));
 
             return Promise.join(gamePromise, channelPromise, function (gameResp, channelResp) {
                 const channels = flattenResponse(channelResp);
-                const games = flattenResponse(gameResp);       
+                const games = flattenResponse(gameResp);
                 return liveStreams.map(function (stream) {
                     const channelInfo = channels.find(function (channel) {
                         return channel.id === stream.user_id;
@@ -339,7 +339,7 @@
             $('#followedStreams').html(getHtmlElement('h6', 'Twitch username not set, add it in the options page'));
             return Promise.resolve();
         }
-        
+
         return getFollowedStreams(TWITCH_ID, TWITCH_TOKEN).then(function (followedStreams) {
             const currentIncluded = getStreamNames(getIncluded());
             followedStreams = followedStreams.map(function (stream) {
@@ -356,7 +356,7 @@
             const games = _.sortBy(_.keys(groupedStreams));
             var followedHtml = games.map(function (gameName) {
                 const gameStreams = groupedStreams[gameName];
-                const streamButtons = gameStreams.map(stream => 
+                const streamButtons = gameStreams.map(stream =>
                     addButton(`${ID_PREFIX.FOLLOW}-${stream.streamName}`, stream.streamName, '#followedStreams', STREAM_SOURCE.FOLLOW, stream.include)
                 );
                 const header = getHtmlElement('h6', gameName);
@@ -367,14 +367,14 @@
             if (err.status == 429) {
                 const errHtml = getHtmlElement('h4', 'Twitch API Rate Limited') + getHtmlElement('h6', 'Try again later or do a full login with twitch in the options page');
                 $('#followedStreams').html(errHtml);
-            } else{
+            } else {
                 throw err;
             }
         });
-       
+
     }
-    
-    $(document).ready(function() {
+
+    $(document).ready(function () {
         function chromeStreams() {
             return chromeStorageGet(['autoInclude']).then(function (userConfig) {
                 AUTO_INCLUDE = userConfig.autoInclude !== undefined ? userConfig.autoInclude : true;
@@ -405,7 +405,7 @@
         }
         function main() {
             return Promise.join(chromeStreams(), setUpTwitch(), function () {
-                
+
             });
         }
 
@@ -417,7 +417,7 @@
 }());
 
 // google-analytics
-(function() {
+(function () {
     var ga = document.createElement('script');
     ga.type = 'text/javascript';
     ga.async = true;

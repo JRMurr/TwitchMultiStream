@@ -4,33 +4,33 @@ const ERRORS = {
 };
 
 function chromeTabsQuery(params) {
-    return new Promise(function(resolve, reject){
+    return new Promise(function (resolve, reject) {
         chrome.tabs.query(params, resolve);
     });
 }
 
 function chromeStorageGet(keys) {
-    return new Promise(function(resolve, reject){
+    return new Promise(function (resolve, reject) {
         chrome.storage.sync.get(keys, resolve);
     });
 }
 
 function chromeStorageSet(storageObj) {
-    return new Promise(function(resolve){
+    return new Promise(function (resolve) {
         chrome.storage.sync.set(storageObj, resolve);
     });
 }
 
 function chromeOuathWeb(url, interactive) {
     return new Promise(function (resolve) {
-        chrome.identity.launchWebAuthFlow({'url': url, 'interactive': interactive}, resolve);
+        chrome.identity.launchWebAuthFlow({ 'url': url, 'interactive': interactive }, resolve);
     });
 }
 
 function twitchGetAjax(apiPath, data, token) {
     apiPath = apiPath.startsWith('/') ? apiPath.substr(1) : apiPath;
     data = data || {};
-    headers = {'Client-ID': config.CLIENT_ID};
+    headers = { 'Client-ID': config.CLIENT_ID };
     if (token) {
         headers.Authorization = `Bearer ${token}`;
     }
@@ -67,13 +67,13 @@ function twitchAuth(interactive) {
     const respType = 'token';
     const scopes = '';
     const url = `https://id.twitch.tv/oauth2/authorize?client_id=${config.CLIENT_ID}` +
-                `&redirect_uri=${redirect}&response_type=${respType}`;
+        `&redirect_uri=${redirect}&response_type=${respType}`;
     var token;
     return chromeOuathWeb(url, interactive).then(function (resp) {
         if (!resp) {
             throw ERRORS.AUTH;
         }
-        token = resp.split('#')[1].replace('access_token=','').replace('&scope=','');
+        token = resp.split('#')[1].replace('access_token=', '').replace('&scope=', '').replace('&token_type=bearer', '');
         return token;
     });
 }
@@ -83,7 +83,7 @@ function saveAuthInfo(token) {
     return twitchGetAjax('users', null, token).then(function (twitchResp) {
         const respData = twitchResp.data[0];
         info = {
-            twitchName: respData.login, 
+            twitchName: respData.login,
             twitchId: respData.id
         };
         return chromeStorageSet(info);
